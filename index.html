@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <link
+      rel="shortcut icon"
+      href="https://flyclipart.com/thumb2/free-weather-clip-art-525547.png"
+      type="image/x-icon"
+    />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+
+  <body>
+    <div id="main">
+      <h1>Know the Weather of Your City</h1>
+      <div>
+        City: <input type="text" id="city" placeholder="Enter City Name" />
+        <button id="searchCity">Search</button>
+        <div>
+          <div id="weather">
+            <div id="data"></div>
+            <div class="mapouter">
+              <div class="gmap_canvas"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="title"></div>
+      <div id="second"></div>
+    </div>
+  </body>
+</html>
+<script>
+  document.getElementById("searchCity").addEventListener(
+    "click",
+    function () {
+      getWeather();
+      getMap();
+      // sevenDayWeather(data, data.coord.lat, data.coord.lon);
+    },
+    {
+      passive: true,
+    }
+  );
+
+  let data_div = document.getElementById("data");
+  let second_div = document.getElementById("second");
+  async function getWeather() {
+    let city = document.getElementById("city").value;
+    try {
+      let response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=db338f344806bdc5378c7acf45f304d4&units=metric`
+      );
+
+      let data = await response.json();
+      showWeather(data);
+
+      sevenDayWeather(data.coord.lat, data.coord.lon);
+    } catch (err) {
+      console.log("err:", err);
+    }
+  }
+
+  function showWeather(weather) {
+    data_div.textContent = null;
+
+    var head = document.createElement("h2");
+    head.innerHTML = "Today's Weather";
+    var temp = document.createElement("p");
+    temp.innerText = `Temp: ${weather.main.temp}°`;
+    var pressure = document.createElement("p");
+    pressure.innerText = `Pressure: ${weather.main.pressure}`;
+    var humidity = document.createElement("p");
+    humidity.innerText = `Humidity: ${weather.main.humidity}`;
+    var temp_max = document.createElement("p");
+    temp_max.innerText = `Temp max: ${weather.main.temp_max}°C`;
+    var temp_min = document.createElement("p");
+    temp_min.innerText = `Temp min: ${weather.main.temp_min}°C`;
+    var childDiv1 = document.createElement("div");
+    var img1 = document.createElement("img");
+    img1.src =
+      "data:image/png;base64,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";
+    var sunrise = document.createElement("p");
+
+    var sunriseTime = new Date(weather.sys.sunrise * 1000);
+
+    sunrise.innerText = `Sunrise: ${sunriseTime.getHours()}:${sunriseTime.getMinutes()}`;
+
+    childDiv1.append(sunrise, img1);
+
+    var childDiv2 = document.createElement("div");
+    var img2 = document.createElement("img");
+    img2.src =
+      "data:image/png;base64,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";
+    var sunset = document.createElement("p");
+
+    var sunsetTime = new Date(weather.sys.sunset * 1000);
+
+    sunset.innerText = `Sunset: ${sunsetTime.getHours()}:${sunsetTime.getMinutes()}`;
+    childDiv2.append(sunset, img2);
+    data_div.append(
+      head,
+      temp,
+      pressure,
+      humidity,
+      temp_max,
+      temp_min,
+      childDiv1,
+      childDiv2
+    );
+
+    let title_div = document.getElementById("title");
+    var title = document.createElement("h1");
+    title.innerHTML = "Seven Days Weather Forecast";
+    title_div.append(title);
+  }
+
+  function getMap() {
+    let city = document.getElementById("city").value;
+    var div1 = document.querySelector(".mapouter");
+    var div2 = document.querySelector(".gmap_canvas");
+
+    div2.innerHTML = `<iframe
+          width="600"
+          height="500"
+          id="gmap_canvas"
+          src="https://maps.google.com/maps?q=${city}&t=&z=13&ie=UTF8&iwloc=&output=embed"
+          frameborder="0"
+          scrolling="no"
+          marginheight="0"
+          marginwidth="0"
+        ></iframe>`;
+  }
+
+  async function sevenDayWeather(lat, lon) {
+    try {
+      let response = await fetch(
+        `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=hourly,minutely&appid=db338f344806bdc5378c7acf45f304d4
+&units=metric`
+      );
+
+      let data = await response.json();
+      let dailyData = data.daily;
+      showSevenDaYWeather(dailyData);
+    } catch (err) {
+      console.log("err:", err);
+    }
+  }
+
+  function showSevenDaYWeather(item) {
+    second_div.textContent = null;
+    item.forEach(function (elem) {
+      var div = document.createElement("div");
+
+      let weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      var date = new Date(elem.dt * 1000);
+
+      var current_day = weekDay[date.getDay()];
+
+      var day = document.createElement("h2");
+      day.innerHTML = current_day;
+      var max = document.createElement("h2");
+      max.innerHTML = `${elem.temp.max}°C`;
+      var min = document.createElement("h2");
+      min.innerHTML = `${elem.temp.min}°C`;
+      var code = elem.weather[0].icon;
+      var icon = document.createElement("img");
+      icon.src = `https://openweathermap.org/img/wn/${code}.png`;
+
+      div.append(day, icon, max, min);
+      second_div.append(div);
+    });
+  }
+</script>
